@@ -2,6 +2,8 @@
 
 This repository contains GitHub Actions workflows for sending automated notifications to multiple messaging platforms, including Gmail, Discord, and Microsoft Teams.
 
+<img width="578" height="394" alt="image" src="https://github.com/user-attachments/assets/35456a6d-ed5f-4703-84e6-d68a44f18acd" />
+
 ## Supported Platforms
 
 | Platform        | Status         |
