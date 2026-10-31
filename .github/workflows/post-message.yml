@@ -1,0 +1,57 @@
+name: Notify Discord when a pull request is opened
+
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  contents: read
+
+jobs:
+  notify-pr-by-discord:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send pull request notification
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          CREATED_AT: ${{ github.event.pull_request.created_at }}
+          REPOSITORY: ${{ github.repository }}
+
+        run: |
+          PAYLOAD=$(jq -n \
+            --arg title "$PR_TITLE" \
+            --arg url "$PR_URL" \
+            --arg number "$PR_NUMBER" \
+            --arg author "$PR_AUTHOR" \
+            --arg head "$HEAD_REF" \
+            --arg base "$BASE_REF" \
+            --arg created "$CREATED_AT" \
+            --arg repo "$REPOSITORY" \
+            '{
+              content: (
+                "🚀 **New Pull Request Opened!**\n\n" +
+                "**Repository:** " + $repo + "\n" +
+                "**PR #" + $number + ":** " + $title + "\n" +
+                "**Author:** " + $author + "\n" +
+                "**Source branch:** `" + $head + "`\n" +
+                "**Target branch:** `" + $base + "`\n" +
+                "**Created at:** " + $created + "\n\n" +
+                "🔗 " + $url
+              ),
+              allowed_mentions: {
+                parse: []
+              }
+            }')
+
+          curl --fail-with-body --silent --show-error \
+            -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD"
